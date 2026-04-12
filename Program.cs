@@ -1,13 +1,15 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using CheoutAPI.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ConcurrentDictionary<string, OrderStatusType>>();
 
 var app = builder.Build();
 
@@ -19,16 +21,21 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/api/checkout", async ([FromHeader(Name = "Idempotency-Key")] string idempotencyKey) =>
+app.MapPost("/api/checkout", async (
+                                [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
+                                ConcurrentDictionary<string, OrderStatusType> requests
+                            ) =>
 {
-    IMemoryCache memoryCache = app.Services.GetRequiredService<IMemoryCache>();
-
-    if (memoryCache.TryGetValue(idempotencyKey, out string? value) && value?.Equals("Idempotency-Key") == true)
+    if (idempotencyKey.Trim().Equals(string.Empty))
     {
-        return Results.Conflict("Conflict");
+        return Results.BadRequest("Invalid request");
     }
 
-    memoryCache.Set(idempotencyKey, "Idempotency-Key");
+    if (requests.TryGetValue(idempotencyKey, out OrderStatusType status))
+    {
+        return Results.Conflict($"Conflict. Request is {status}");
+    }
+
 
     await Task.Delay(2000);
     return Results.Ok("OK");
