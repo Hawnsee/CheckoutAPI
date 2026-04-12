@@ -36,8 +36,22 @@ app.MapPost("/api/checkout", async (
         return Results.Conflict($"Conflict. Request is {status}");
     }
 
+    OrderStatusType orderStatusType = OrderStatusType.CREATED;
+
+    if (!requests.TryAdd(idempotencyKey, orderStatusType))
+    {
+        return Results.Conflict("TO DEFINE MESSAGE");
+    }
 
     await Task.Delay(2000);
+
+    orderStatusType = OrderStatusType.COMPLETED;
+
+    if (!requests.TryUpdate(idempotencyKey, orderStatusType, OrderStatusType.CREATED))
+    {
+        return Results.Conflict("TO DEFINE MESSAGE");
+    }
+
     return Results.Ok("OK");
 })
 .WithName("Checkout");

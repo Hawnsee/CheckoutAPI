@@ -30,3 +30,4 @@ C:\Users\dev\Desktop\estudio\CheckoutAPI\obj\Debug\net9.0\refint\CheckoutAPI.dll
 C:\Users\dev\Desktop\estudio\CheckoutAPI\obj\Debug\net9.0\CheckoutAPI.pdb
 C:\Users\dev\Desktop\estudio\CheckoutAPI\obj\Debug\net9.0\CheckoutAPI.genruntimeconfig.cache
 C:\Users\dev\Desktop\estudio\CheckoutAPI\obj\Debug\net9.0\ref\CheckoutAPI.dll
+C:\Users\dev\Desktop\estudio\CheckoutAPI\obj\Debug\net9.0\CheckoutAPI.sourcelink.json
