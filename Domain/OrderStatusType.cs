@@ -1,8 +1,9 @@
-namespace CheoutAPI.Domain;
-
-public enum OrderStatusType
+namespace CheckoutAPI.Domain
 {
-    CREATED,
-    COMPLETED,
-    FAILED
+    public enum OrderStatusType
+    {
+        CREATED = 0,
+        COMPLETED = 1,
+        FAILED = 2
+    }
 }
