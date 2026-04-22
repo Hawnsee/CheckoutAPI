@@ -9,7 +9,7 @@ namespace CheckoutAPI.Application.Commands
     where T : IRequest<R>
     {
         private readonly IMediator _mediator;
-        
+
         private readonly ILogger<IdentifiedCommandHandler<T, R>> _logger;
 
         private readonly IdempotentRequestDAO _idempotentRequestDAO;
@@ -55,6 +55,18 @@ namespace CheckoutAPI.Application.Commands
             }
 
             var result = await _mediator.Send(request.Command, cancellationToken);
+
+            idempotentRequest.StatusType = OrderStatusType.COMPLETED;
+
+            try
+            {
+                await _idempotentRequestDAO.InserOrUpdatetIdempotentRequest(idempotentRequest);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.ToString());
+                return CreateResultForRequestError();
+            }
             return result;
         }
     }

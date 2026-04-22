@@ -21,25 +21,6 @@ namespace CheckoutAPI.Application.Commands
         {
             await Task.Delay(5000);
 
-            var idempotentRequest = await _idempotentRequestDAO.LoadByKey(request.IdempotencyKey);
-
-            if (idempotentRequest == null)
-            {
-                return CheckoutResult.ERROR;
-            }
-
-            idempotentRequest.StatusType = OrderStatusType.COMPLETED;
-
-            try
-            {
-                await _idempotentRequestDAO.InserOrUpdatetIdempotentRequest(idempotentRequest);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.ToString());
-                return CheckoutResult.ERROR;
-            }
-
             return CheckoutResult.COMPLETED;
         }
     }
@@ -47,12 +28,12 @@ namespace CheckoutAPI.Application.Commands
     public class CheckoutIdentifiedCommandHandler : IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>
     {
         public CheckoutIdentifiedCommandHandler(
-                                            IMediator mediator, 
-                                            IdempotentRequestDAO idempotentRequestDAO, 
+                                            IMediator mediator,
+                                            IdempotentRequestDAO idempotentRequestDAO,
                                             ILogger<IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>> logger
                                         ) : base(mediator, idempotentRequestDAO, logger)
         {
-            
+
         }
 
         private CheckoutResult GetCheckoutResultByOrderStatusType(OrderStatusType orderStatusType)

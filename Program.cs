@@ -34,7 +34,8 @@ app.UseHttpsRedirection();
 app.MapGet("/api/idempotencyRequest/{id}", async (
                                                 [FromRoute] string id,
                                                 IdempotentRequestDAO idempotentRequestDAO
-                                            ) => {
+                                            ) =>
+{
 
     var record = await idempotentRequestDAO.LoadByKey(id);
     return Results.Ok(record?.ToString());
@@ -46,14 +47,17 @@ app.MapPost("/api/checkout", async (
                                 IMediator _mediator
                             ) =>
 {
-    
+
     if (string.IsNullOrWhiteSpace(idempotencyKey))
     {
-            return Results.BadRequest();
+        return Results.BadRequest();
     }
 
-    CheckoutResult result = await _mediator.Send(new CheckoutCommand(idempotencyKey));
-    
+    CheckoutResult result = await _mediator.Send(new IdentifiedCommand<CheckoutCommand, CheckoutResult>(
+        new CheckoutCommand(),
+        idempotencyKey
+    ));
+
     switch (result)
     {
         case CheckoutResult.COMPLETED:

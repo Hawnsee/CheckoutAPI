@@ -2,8 +2,8 @@ using MediatR;
 
 namespace CheckoutAPI.Application.Commands
 {
-    public record CheckoutCommand(string IdempotencyKey) : IRequest<CheckoutResult>
+    public record CheckoutCommand() : IRequest<CheckoutResult>
     {
-        
+
     }
 }
