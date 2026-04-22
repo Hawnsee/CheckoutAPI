@@ -5,11 +5,11 @@ using MediatR;
 
 namespace CheckoutAPI.Application.Commands
 {
-    public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, IResult>
+    public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutResult>
     {
-        public IdempotentRequestDAO _idempotentRequestDAO { get; set; }
+        private readonly IdempotentRequestDAO _idempotentRequestDAO;
 
-        public ILogger<CheckoutCommandHandler> _logger { get; set; }
+        private readonly ILogger<CheckoutCommandHandler> _logger;
 
         public CheckoutCommandHandler(IdempotentRequestDAO idempotentRequestDAO, ILogger<CheckoutCommandHandler> logger)
         {
@@ -17,11 +17,24 @@ namespace CheckoutAPI.Application.Commands
             _logger = logger;
         }
 
-        public async Task<IResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
+        private CheckoutResult GetCheckoutResultByOrderStatusType(OrderStatusType orderStatusType)
+        {
+            switch (orderStatusType)
+            {
+                case OrderStatusType.COMPLETED:
+                    return CheckoutResult.COMPLETED;
+                case OrderStatusType.CREATED:
+                    return CheckoutResult.DUPLICATED;
+                default:
+                    return CheckoutResult.ERROR;
+            }
+        }
+
+        public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.IdempotencyKey))
             {
-                return Results.BadRequest("Invalid request");
+                return CheckoutResult.BAD_REQUEST;
             }
 
             var idempotentRequest = new IdempotentRequest() { Key = request.IdempotencyKey, StatusType = OrderStatusType.CREATED };
@@ -36,16 +49,16 @@ namespace CheckoutAPI.Application.Commands
 
                 if (db_idempotentRequest != null)
                 {
-                    return Results.Conflict($"Conflict. Request is {db_idempotentRequest.StatusType}");
+                    return GetCheckoutResultByOrderStatusType(db_idempotentRequest.StatusType);
                 }
 
                 _logger.LogError("Could not find idempotentRequest after UniqueConstraintException.");
-                return Results.InternalServerError();
+                return CheckoutResult.ERROR;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                return Results.InternalServerError();
+                return CheckoutResult.ERROR;
             }
 
             await Task.Delay(5000);
@@ -59,10 +72,10 @@ namespace CheckoutAPI.Application.Commands
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                return Results.InternalServerError();
+                return CheckoutResult.ERROR;
             }
 
-            return Results.Ok("OK");
+            return CheckoutResult.COMPLETED;
         }
     }
 }

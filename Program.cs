@@ -5,6 +5,8 @@ using CheckoutAPI.DB;
 using Microsoft.EntityFrameworkCore;
 using EntityFramework.Exceptions.SqlServer;
 using EntityFramework.Exceptions.Common;
+using MediatR;
+using CheckoutAPI.Application.Commands;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,54 +43,22 @@ app.MapGet("/api/idempotencyRequest/{id}", async (
 
 app.MapPost("/api/checkout", async (
                                 [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
-                                IdempotentRequestDAO idempotentRequestDAO,
-                                ILogger<Program> logger
+                                IMediator _mediator
                             ) =>
 {
-    if (string.IsNullOrWhiteSpace(idempotencyKey))
+    CheckoutResult result = await _mediator.Send(new CheckoutCommand(idempotencyKey));
+    
+    switch (result)
     {
-        return Results.BadRequest("Invalid request");
+        case CheckoutResult.COMPLETED:
+            return Results.Ok();
+        case CheckoutResult.DUPLICATED:
+            return Results.Conflict();
+        case CheckoutResult.BAD_REQUEST:
+            return Results.BadRequest();
+        default:
+            return Results.InternalServerError();
     }
-
-    var idempotentRequest = new IdempotentRequest() { Key = idempotencyKey, StatusType = OrderStatusType.CREATED };
-
-    try
-    {
-        await idempotentRequestDAO.InsertIdempotentRequest(idempotentRequest);
-    }
-    catch (UniqueConstraintException)
-    {
-        var db_idempotentRequest = await idempotentRequestDAO.LoadByKey(idempotencyKey);
-
-        if (db_idempotentRequest != null)
-        {
-            return Results.Conflict($"Conflict. Request is {db_idempotentRequest.StatusType}");
-        }
-
-        logger.LogError("Could not find idempotentRequest after UniqueConstraintException.");
-        return Results.InternalServerError();
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex.ToString());
-        return Results.InternalServerError();
-    }
-
-    await Task.Delay(5000);
-
-    idempotentRequest.StatusType = OrderStatusType.COMPLETED;
-
-    try
-    {
-        await idempotentRequestDAO.InserOrUpdatetIdempotentRequest(idempotentRequest);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex.ToString());
-        return Results.InternalServerError();
-    }
-
-    return Results.Ok("OK");
 })
 .WithName("Checkout");
 

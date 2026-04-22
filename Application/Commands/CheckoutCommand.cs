@@ -2,7 +2,7 @@ using MediatR;
 
 namespace CheckoutAPI.Application.Commands
 {
-    public record CheckoutCommand(string IdempotencyKey) : IRequest<IResult>
+    public record CheckoutCommand(string IdempotencyKey) : IRequest<CheckoutResult>
     {
         
     }
