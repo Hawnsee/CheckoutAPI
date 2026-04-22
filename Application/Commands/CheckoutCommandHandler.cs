@@ -17,51 +17,16 @@ namespace CheckoutAPI.Application.Commands
             _logger = logger;
         }
 
-        private CheckoutResult GetCheckoutResultByOrderStatusType(OrderStatusType orderStatusType)
-        {
-            switch (orderStatusType)
-            {
-                case OrderStatusType.COMPLETED:
-                    return CheckoutResult.COMPLETED;
-                case OrderStatusType.CREATED:
-                    return CheckoutResult.DUPLICATED;
-                default:
-                    return CheckoutResult.ERROR;
-            }
-        }
-
         public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(request.IdempotencyKey))
-            {
-                return CheckoutResult.BAD_REQUEST;
-            }
-
-            var idempotentRequest = new IdempotentRequest() { Key = request.IdempotencyKey, StatusType = OrderStatusType.CREATED };
-
-            try
-            {
-                await _idempotentRequestDAO.InsertIdempotentRequest(idempotentRequest);
-            }
-            catch (UniqueConstraintException)
-            {
-                var db_idempotentRequest = await _idempotentRequestDAO.LoadByKey(request.IdempotencyKey);
-
-                if (db_idempotentRequest != null)
-                {
-                    return GetCheckoutResultByOrderStatusType(db_idempotentRequest.StatusType);
-                }
-
-                _logger.LogError("Could not find idempotentRequest after UniqueConstraintException.");
-                return CheckoutResult.ERROR;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.ToString());
-                return CheckoutResult.ERROR;
-            }
-
             await Task.Delay(5000);
+
+            var idempotentRequest = await _idempotentRequestDAO.LoadByKey(request.IdempotencyKey);
+
+            if (idempotentRequest == null)
+            {
+                return CheckoutResult.ERROR;
+            }
 
             idempotentRequest.StatusType = OrderStatusType.COMPLETED;
 
@@ -76,6 +41,41 @@ namespace CheckoutAPI.Application.Commands
             }
 
             return CheckoutResult.COMPLETED;
+        }
+    }
+
+    public class CheckoutIdentifiedCommandHandler : IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>
+    {
+        public CheckoutIdentifiedCommandHandler(
+                                            IMediator mediator, 
+                                            IdempotentRequestDAO idempotentRequestDAO, 
+                                            ILogger<IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>> logger
+                                        ) : base(mediator, idempotentRequestDAO, logger)
+        {
+            
+        }
+
+        private CheckoutResult GetCheckoutResultByOrderStatusType(OrderStatusType orderStatusType)
+        {
+            switch (orderStatusType)
+            {
+                case OrderStatusType.COMPLETED:
+                    return CheckoutResult.COMPLETED;
+                case OrderStatusType.CREATED:
+                    return CheckoutResult.DUPLICATED;
+                default:
+                    return CheckoutResult.ERROR;
+            }
+        }
+
+        protected override CheckoutResult CreateResultForDuplicateRequest(OrderStatusType status)
+        {
+            return GetCheckoutResultByOrderStatusType(status);
+        }
+
+        protected override CheckoutResult CreateResultForRequestError()
+        {
+            return CheckoutResult.ERROR;
         }
     }
 }

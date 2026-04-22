@@ -46,6 +46,12 @@ app.MapPost("/api/checkout", async (
                                 IMediator _mediator
                             ) =>
 {
+    
+    if (string.IsNullOrWhiteSpace(idempotencyKey))
+    {
+            return Results.BadRequest();
+    }
+
     CheckoutResult result = await _mediator.Send(new CheckoutCommand(idempotencyKey));
     
     switch (result)
