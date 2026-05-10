@@ -1,0 +1,7 @@
+services:
+  web:
+    image: checkoutapi:v1
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=${DEFAULT_DATABASE_CONNECTION}
