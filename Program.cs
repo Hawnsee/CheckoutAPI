@@ -1,12 +1,10 @@
-using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Mvc;
-using CheckoutAPI.Domain;
 using CheckoutAPI.DB;
 using Microsoft.EntityFrameworkCore;
 using EntityFramework.Exceptions.SqlServer;
-using EntityFramework.Exceptions.Common;
 using MediatR;
 using CheckoutAPI.Application.Commands;
+using Microsoft.Extensions.Http.Resilience;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IdempotentRequestDAO>();
+var httpClientBuilder = builder.Services.AddHttpClient("PaymentClient");
+httpClientBuilder.AddStandardResilienceHandler();
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
 

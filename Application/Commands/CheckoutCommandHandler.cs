@@ -1,6 +1,5 @@
 using CheckoutAPI.DB;
 using CheckoutAPI.Domain;
-using EntityFramework.Exceptions.Common;
 using MediatR;
 
 namespace CheckoutAPI.Application.Commands
@@ -11,17 +10,39 @@ namespace CheckoutAPI.Application.Commands
 
         private readonly ILogger<CheckoutCommandHandler> _logger;
 
-        public CheckoutCommandHandler(IdempotentRequestDAO idempotentRequestDAO, ILogger<CheckoutCommandHandler> logger)
+        private readonly HttpClient _httpClient;
+
+        public CheckoutCommandHandler(
+                IdempotentRequestDAO idempotentRequestDAO, 
+                ILogger<CheckoutCommandHandler> logger,
+                IHttpClientFactory httpClientFactory
+            )
         {
             _idempotentRequestDAO = idempotentRequestDAO;
             _logger = logger;
+            _httpClient = httpClientFactory.CreateClient("PaymentClient");
         }
 
         public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
-            await Task.Delay(5000);
+            _logger.LogInformation("Iniciando llamada al servicio de pagos externo...");
 
-            return CheckoutResult.COMPLETED;
+            // Usamos httpstat.us, un servicio público diseñado para forzar códigos de respuesta HTTP específicos. 
+            // Un error 500 simula que la pasarela de pago externa está totalmente colapsada.
+
+            try
+            {
+                var response = await _httpClient.GetAsync("https://httpstat.us/500", cancellationToken);
+
+                _logger.LogInformation("Llamada finalizada con estado: {StatusCode}", response.StatusCode);
+
+                return CheckoutResult.COMPLETED;
+            }
+            catch (HttpRequestException)
+            {
+                _logger.LogError("El servicio de pagos ha fallado tras todos los reintentos.");
+                return CheckoutResult.ERROR;
+            }
         }
     }
 
