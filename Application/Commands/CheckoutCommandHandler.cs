@@ -1,5 +1,6 @@
-using CheckoutAPI.DB;
-using CheckoutAPI.Domain;
+using Checkout.Contracts.Events;
+using DAL;
+using MassTransit;
 using MediatR;
 
 namespace CheckoutAPI.Application.Commands
@@ -12,15 +13,19 @@ namespace CheckoutAPI.Application.Commands
 
         private readonly HttpClient _httpClient;
 
+        private readonly IPublishEndpoint _publishEndpoint;
+
         public CheckoutCommandHandler(
-                IdempotentRequestDAO idempotentRequestDAO, 
+                IdempotentRequestDAO idempotentRequestDAO,
                 ILogger<CheckoutCommandHandler> logger,
-                IHttpClientFactory httpClientFactory
+                IHttpClientFactory httpClientFactory,
+                IPublishEndpoint publishEndpoint
             )
         {
             _idempotentRequestDAO = idempotentRequestDAO;
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("PaymentClient");
+            _publishEndpoint = publishEndpoint;
         }
 
         public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
@@ -32,9 +37,12 @@ namespace CheckoutAPI.Application.Commands
 
             try
             {
-                var response = await _httpClient.GetAsync("https://httpstat.us/500", cancellationToken);
+                var response = await _httpClient.GetAsync("https://tools-httpstatus.pickup-services.com/200?sleep=5000", cancellationToken);
+                response.EnsureSuccessStatusCode();
 
                 _logger.LogInformation("Llamada finalizada con estado: {StatusCode}", response.StatusCode);
+
+                await _publishEndpoint.Publish(new OrderCompletedIntegrationEvent(Guid.NewGuid().ToString(), DateTime.Now));
 
                 return CheckoutResult.COMPLETED;
             }
@@ -78,6 +86,17 @@ namespace CheckoutAPI.Application.Commands
         protected override CheckoutResult CreateResultForRequestError()
         {
             return CheckoutResult.ERROR;
+        }
+
+        protected override OrderStatusType GetOrderStatusType(CheckoutResult result)
+        {
+            switch (result)
+            {
+                case CheckoutResult.COMPLETED:
+                    return OrderStatusType.COMPLETED;
+                default:
+                    return OrderStatusType.FAILED;
+            }
         }
     }
 }

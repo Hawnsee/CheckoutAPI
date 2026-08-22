@@ -1,5 +1,4 @@
-using CheckoutAPI.DB;
-using CheckoutAPI.Domain;
+using DAL;
 using EntityFramework.Exceptions.Common;
 using MediatR;
 
@@ -27,6 +26,8 @@ namespace CheckoutAPI.Application.Commands
         protected abstract R CreateResultForDuplicateRequest(OrderStatusType status);
 
         protected abstract R CreateResultForRequestError();
+
+        protected abstract OrderStatusType GetOrderStatusType(R result);
 
         public async Task<R> Handle(IdentifiedCommand<T, R> request, CancellationToken cancellationToken)
         {
@@ -56,7 +57,7 @@ namespace CheckoutAPI.Application.Commands
 
             var result = await _mediator.Send(request.Command, cancellationToken);
 
-            idempotentRequest.StatusType = OrderStatusType.COMPLETED;
+            idempotentRequest.StatusType = GetOrderStatusType(result);
 
             try
             {

@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using CheckoutAPI.DB;
+using DAL;
 using Microsoft.EntityFrameworkCore;
 using EntityFramework.Exceptions.SqlServer;
 using MediatR;
 using CheckoutAPI.Application.Commands;
-using Microsoft.Extensions.Http.Resilience;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +12,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IdempotentRequestDAO>();
+
+builder.Services.AddMassTransit(x =>
+{
+    // A Transport
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var host = context.GetRequiredService<IConfiguration>()["rabbitMqHost"];
+        cfg.Host(host);
+    });
+
+    x.AddEntityFrameworkOutbox<ApplicationDBContext>(o =>
+    {
+        o.UseSqlServer();
+        o.UseBusOutbox();
+    });
+});
+
 var httpClientBuilder = builder.Services.AddHttpClient("PaymentClient");
 httpClientBuilder.AddStandardResilienceHandler();
 

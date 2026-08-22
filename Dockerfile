@@ -1,10 +1,21 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0@sha256:3fcf6f1e809c0553f9feb222369f58749af314af6f063f389cbd2f913b4ad556 AS build
-WORKDIR /app
+WORKDIR /src
 
-COPY ["CheckoutAPI.csproj", "./"]
-RUN dotnet restore "CheckoutAPI.csproj"
+# 1. Copy project files
+COPY ["CheckoutAPI/CheckoutAPI.csproj", "CheckoutAPI/"]
+COPY ["Checkout.Contracts/Checkout.Contracts.csproj", "Checkout.Contracts/"]
+COPY ["DAL/DAL.csproj", "DAL/"]
 
-COPY . .
+# 2. Restore dependencies
+RUN dotnet restore "CheckoutAPI/CheckoutAPI.csproj"
+
+# 3. Copy full source code
+COPY CheckoutAPI/ CheckoutAPI/
+COPY Checkout.Contracts/ Checkout.Contracts/
+COPY DAL/ DAL/
+
+# 4. Compile
+WORKDIR "/src/CheckoutAPI"
 RUN dotnet publish "CheckoutAPI.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Build runtime image
@@ -12,7 +23,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0@sha256:b4bea3a52a0a77317fa93c5bbdb07662
 WORKDIR /app
 EXPOSE 8080
 USER app
-
 
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "CheckoutAPI.dll"]
