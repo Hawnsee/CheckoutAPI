@@ -1,8 +1,7 @@
-[Bb]in/
-[Oo]bj/
-docs
-.vs/
-.vscode/
-.git/
-.github/
+**/.vs/
+**/.vscode/
+**/bin/
+**/obj/
+**/.git/
+**/docs/
 .env

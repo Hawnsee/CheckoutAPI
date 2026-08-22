@@ -1,0 +1,32 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: CheckoutAPI\Dockerfile
+    image: checkoutapi:v1
+    ports:
+      - "8080:8080"
+    environment:
+      - ConnectionStrings__DefaultConnection=${DEFAULT_DATABASE_CONNECTION}
+      - rabbitMqHost=rabbitmq
+    depends_on:
+      - rabbitmq
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports: 
+      - "5672:5672"
+      - "15672:15672"
+
+  notification:
+    build: 
+      context: .
+      dockerfile: NotificationsService\Dockerfile
+    image: notificationservice:v1
+    environment:
+      - ConnectionStrings__DefaultConnection=${DEFAULT_DATABASE_CONNECTION}
+      - rabbitMqHost=rabbitmq
+      - DOTNET_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - rabbitmq
