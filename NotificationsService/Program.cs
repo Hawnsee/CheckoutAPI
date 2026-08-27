@@ -12,6 +12,7 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<OrderCompletedEventConsumer>();
+    x.AddConsumer<OrderCreatedEventConsumer>();
 
     var useOutbox = builder.Configuration.GetValue("UseTransactionalOutbox", true);
 

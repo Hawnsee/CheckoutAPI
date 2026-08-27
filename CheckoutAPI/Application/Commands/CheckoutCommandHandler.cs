@@ -7,7 +7,6 @@ namespace CheckoutAPI.Application.Commands
 {
     public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutResult>
     {
-        private readonly IdempotentRequestDAO _idempotentRequestDAO;
 
         private readonly ILogger<CheckoutCommandHandler> _logger;
 
@@ -15,17 +14,19 @@ namespace CheckoutAPI.Application.Commands
 
         private readonly IPublishEndpoint _publishEndpoint;
 
+        private readonly CheckoutOrderDAO _checkoutOrderDAO;
+
         public CheckoutCommandHandler(
-                IdempotentRequestDAO idempotentRequestDAO,
                 ILogger<CheckoutCommandHandler> logger,
                 IHttpClientFactory httpClientFactory,
-                IPublishEndpoint publishEndpoint
+                IPublishEndpoint publishEndpoint,
+                CheckoutOrderDAO checkoutOrderDAO
             )
         {
-            _idempotentRequestDAO = idempotentRequestDAO;
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("PaymentClient");
             _publishEndpoint = publishEndpoint;
+            _checkoutOrderDAO = checkoutOrderDAO;
         }
 
         public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
@@ -37,12 +38,18 @@ namespace CheckoutAPI.Application.Commands
 
             try
             {
-                var response = await _httpClient.GetAsync("https://tools-httpstatus.pickup-services.com/200?sleep=5000", cancellationToken);
-                response.EnsureSuccessStatusCode();
+                // var response = await _httpClient.GetAsync("https://tools-httpstatus.pickup-services.com/200?sleep=5000", cancellationToken);
+                // response.EnsureSuccessStatusCode();
 
-                _logger.LogInformation("Llamada finalizada con estado: {StatusCode}", response.StatusCode);
+                var order = new CheckoutOrder() { Id = request.Id, Price = request.Price, Status = CheckoutStatusType.CREATED };
 
-                await _publishEndpoint.Publish(new OrderCompletedIntegrationEvent(Guid.NewGuid().ToString(), DateTime.Now));
+                await _checkoutOrderDAO.InsertCheckoutOrder_NoCommit(order);
+
+                await _publishEndpoint.Publish(new OrderCreatedIntegrationEvent(Guid.NewGuid(), order.Id, DateTime.Now));
+
+                await _checkoutOrderDAO.SaveChangesAsync();
+
+                _logger.LogInformation($"Order creado. {order.ToString()}");
 
                 return CheckoutResult.COMPLETED;
             }

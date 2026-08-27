@@ -30,3 +30,28 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - rabbitmq
+
+  payment:
+    build: 
+      context: .
+      dockerfile: PaymentService\Dockerfile
+    image: paymentservice:v1
+    environment:
+      - rabbitMqHost=rabbitmq
+      - DOTNET_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - rabbitmq
+
+  saga:
+    build: 
+      context: .
+      dockerfile: CheckoutSaga\Dockerfile
+    image: checkoutsaga:v1
+    environment:
+      - ConnectionStrings__DefaultConnection=${DEFAULT_DATABASE_CONNECTION}
+      - rabbitMqHost=rabbitmq
+      - DOTNET_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - rabbitmq
