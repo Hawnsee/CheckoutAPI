@@ -18,7 +18,7 @@ public class CancelOrderConsumer : IConsumer<CancelOrderCommand>
     public async Task Consume(ConsumeContext<CancelOrderCommand> context)
     {
         _logger.LogInformation("Orden cancelada: {Id}", context.Message.OrderId);
-        var order = await _checkoutOrderDAO.LoadById(context.Message.OrderId);
+        var order = await _checkoutOrderDAO.LoadByIdForUpdate(context.Message.OrderId);
         if (order != null)
         {
             order.Status = CheckoutStatusType.CANCELLED;
