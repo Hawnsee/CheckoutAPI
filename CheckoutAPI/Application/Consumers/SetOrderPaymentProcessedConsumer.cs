@@ -6,10 +6,10 @@ namespace CheckoutAPI.Application.Consumers
 {
     public class SetOrderPaymentProcessedConsumer : IConsumer<SetOrderPaymentProcessedCommand>
     {
-        private readonly ILogger<CancelOrderConsumer> _logger;
+        private readonly ILogger<SetOrderPaymentProcessedConsumer> _logger;
         private readonly CheckoutOrderDAO _checkoutOrderDAO;
 
-        public SetOrderPaymentProcessedConsumer(ILogger<CancelOrderConsumer> logger, CheckoutOrderDAO checkoutOrderDAO)
+        public SetOrderPaymentProcessedConsumer(ILogger<SetOrderPaymentProcessedConsumer> logger, CheckoutOrderDAO checkoutOrderDAO)
         {
             _logger = logger;
             _checkoutOrderDAO = checkoutOrderDAO;

@@ -42,10 +42,10 @@ namespace CheckoutSaga
                 When(PaymentProcessedEvent)
                 .IfElse(context => context.Message.Success,
                     binder => binder
-                    .Publish(context => new SetOrderPaymentProcessedCommand(context.Message.OrderId))
+                    .Publish(context => new SetOrderPaymentProcessedCommand(context.Saga.OrderId))
                     .TransitionTo(PaymentProcessed),
                     binder => binder
-                    .Publish(context => new CancelOrderCommand(context.Message.OrderId))
+                    .Publish(context => new CancelOrderCommand(context.Saga.OrderId))
                     .TransitionTo(Faulted)
                 )
             );
