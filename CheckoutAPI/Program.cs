@@ -19,6 +19,7 @@ builder.Services.AddScoped<CheckoutOrderDAO>();
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<CancelOrderConsumer>();
+    x.AddConsumer<SetOrderPaymentProcessedConsumer>();
 
     // A Transport
     x.UsingRabbitMq((context, cfg) =>

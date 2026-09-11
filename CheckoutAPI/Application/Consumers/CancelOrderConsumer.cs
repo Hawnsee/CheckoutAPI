@@ -1,6 +1,6 @@
 namespace CheckoutAPI.Application.Consumers;
 
-using Checkout.Contracts;
+using Checkout.Contracts.Commands;
 using MassTransit;
 using DAL;
 
