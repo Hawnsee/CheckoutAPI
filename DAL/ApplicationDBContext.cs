@@ -38,6 +38,10 @@ namespace DAL
                 .HasMaxLength(100)
                 .ValueGeneratedNever();
 
+            modelBuilder.Entity<CheckoutState>()
+                .Property(i => i.PaymentResult)
+                .IsRequired(false);
+
             modelBuilder.Entity<CheckoutOrder>().HasKey(c => c.Id);
 
             modelBuilder.Entity<CheckoutOrder>()
