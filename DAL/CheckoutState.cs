@@ -10,6 +10,8 @@ namespace DAL
 
         public string OrderId { get; set; }
 
+        public PaymentResult PaymentResult { get; set; }
+
         public string? FaultMessage { get; set; }
     }
 }

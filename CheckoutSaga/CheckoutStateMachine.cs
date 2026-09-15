@@ -7,11 +7,7 @@ namespace CheckoutSaga
 {
     public class CheckoutStateMachine : MassTransitStateMachine<CheckoutState>
     {
-        public State PaymentProcessed { get; private set; }
-        
         public State PaymentPending { get; private set; }
-        
-        public State Faulted { get; private set; }
 
         public Event<OrderCreatedIntegrationEvent> OrderCreatedEvent { get; private set; }
 
@@ -43,10 +39,12 @@ namespace CheckoutSaga
                 .IfElse(context => context.Message.Success,
                     binder => binder
                     .Publish(context => new SetOrderPaymentProcessedCommand(context.Saga.OrderId))
-                    .TransitionTo(PaymentProcessed),
+                    .Then(context => context.Saga.PaymentResult = PaymentResult.ACCEPTED)
+                    .Finalize(),
                     binder => binder
                     .Publish(context => new CancelOrderCommand(context.Saga.OrderId))
-                    .TransitionTo(Faulted)
+                    .Then(context => context.Saga.PaymentResult = PaymentResult.REJECTED)
+                    .Finalize()
                 )
             );
         }
