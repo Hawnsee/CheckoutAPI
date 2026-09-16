@@ -39,11 +39,17 @@ namespace CheckoutSaga
                 .IfElse(context => context.Message.Success,
                     binder => binder
                     .Publish(context => new SetOrderPaymentProcessedCommand(context.Saga.OrderId))
-                    .Then(context => context.Saga.PaymentResult = PaymentResult.ACCEPTED)
+                    .Then(context =>
+                                {
+                                    context.Saga.PaymentResult = PaymentResult.ACCEPTED;
+                                })
                     .Finalize(),
                     binder => binder
                     .Publish(context => new CancelOrderCommand(context.Saga.OrderId))
-                    .Then(context => context.Saga.PaymentResult = PaymentResult.REJECTED)
+                    .Then(context => 
+                                { 
+                                    context.Saga.PaymentResult = PaymentResult.REJECTED;
+                                })
                     .Finalize()
                 )
             );

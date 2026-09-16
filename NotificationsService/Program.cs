@@ -40,7 +40,7 @@ builder.Services.AddMassTransit(x =>
         cfg.UseConcurrencyLimit(5);
 
         cfg.UseMessageRetry(r => r.Exponential(
-            5,
+            1,
             TimeSpan.FromSeconds(2),
             TimeSpan.FromSeconds(120),
             TimeSpan.FromSeconds(2)

@@ -18,6 +18,20 @@ builder.Services.AddMassTransit(x =>
        r.ExistingDbContext<ApplicationDBContext>();
     });
 
+    x.AddEntityFrameworkOutbox<ApplicationDBContext>(o =>
+    {
+        o.UseSqlServer();
+    });
+
+    x.AddConfigureEndpointsCallback((context, name, cfg) =>
+    {
+        cfg.UseEntityFrameworkOutbox<ApplicationDBContext>(context, options =>
+        {
+            options.MessageDeliveryLimit = 100;
+            options.MessageDeliveryTimeout = TimeSpan.FromSeconds(45);
+        });
+    });
+
     x.UsingRabbitMq((context, cfg) =>
     {
         var host = context.GetRequiredService<IConfiguration>()["rabbitMqHost"];
