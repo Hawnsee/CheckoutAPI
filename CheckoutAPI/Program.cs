@@ -74,16 +74,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/idempotencyRequest/{id}", async (
-                                                [FromRoute] string id,
-                                                IdempotentRequestDAO idempotentRequestDAO
-                                            ) =>
+app.MapGet("/api/checkout/status/{id}", async ([FromRoute] string id, CheckoutOrderDAO checkoutOrderDAO) =>
 {
+    var record = await checkoutOrderDAO.LoadById(id);
+    
+    if (record == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(record.Status.ToString());
 
-    var record = await idempotentRequestDAO.LoadByKey(id);
-    return Results.Ok(record?.ToString());
-
-}).WithName("GetIdempotencyRequest");
+}).WithName("GetCheckoutStatus");
 
 app.MapPost("/api/checkout", async (
                                 [FromHeader(Name = "Idempotency-Key")] string idempotencyKey,
