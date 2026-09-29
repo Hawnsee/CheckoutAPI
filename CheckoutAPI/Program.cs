@@ -107,7 +107,7 @@ app.MapPost("/api/checkout", async (
     switch (result)
     {
         case CheckoutResult.PROCESSED:
-            return Results.Accepted("/api/checkout/status/{id}", idempotencyKey);
+            return Results.Accepted($"/api/checkout/status/{idempotencyKey}", new { Id = idempotencyKey });
         case CheckoutResult.DUPLICATED:
             return Results.Conflict();
         case CheckoutResult.BAD_REQUEST:
