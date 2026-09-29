@@ -51,7 +51,7 @@ namespace CheckoutAPI.Application.Commands
 
                 _logger.LogInformation($"Order creado. {order.ToString()}");
 
-                return CheckoutResult.COMPLETED;
+                return CheckoutResult.PROCESSED;
             }
             catch (HttpRequestException)
             {
@@ -77,7 +77,7 @@ namespace CheckoutAPI.Application.Commands
             switch (orderStatusType)
             {
                 case OrderStatusType.COMPLETED:
-                    return CheckoutResult.COMPLETED;
+                    return CheckoutResult.PROCESSED;
                 case OrderStatusType.CREATED:
                     return CheckoutResult.DUPLICATED;
                 default:
@@ -99,7 +99,7 @@ namespace CheckoutAPI.Application.Commands
         {
             switch (result)
             {
-                case CheckoutResult.COMPLETED:
+                case CheckoutResult.PROCESSED:
                     return OrderStatusType.COMPLETED;
                 default:
                     return OrderStatusType.FAILED;

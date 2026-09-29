@@ -2,7 +2,7 @@ namespace CheckoutAPI.Application.Commands
 {
     public enum CheckoutResult
     {
-        COMPLETED,
+        PROCESSED,
         ERROR,
         DUPLICATED,
         BAD_REQUEST
