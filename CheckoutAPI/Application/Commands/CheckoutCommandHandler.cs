@@ -1,11 +1,13 @@
 using Checkout.Contracts.Events;
+using CheckoutAPI.Application.Entities;
 using DAL;
 using MassTransit;
 using MediatR;
+using static MassTransit.ValidationResultExtensions;
 
 namespace CheckoutAPI.Application.Commands
 {
-    public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutResult>
+    public class CheckoutCommandHandler : IRequestHandler<CheckoutCommand, CheckoutResponse>
     {
 
         private readonly ILogger<CheckoutCommandHandler> _logger;
@@ -29,7 +31,7 @@ namespace CheckoutAPI.Application.Commands
             _checkoutOrderDAO = checkoutOrderDAO;
         }
 
-        public async Task<CheckoutResult> Handle(CheckoutCommand request, CancellationToken cancellationToken)
+        public async Task<CheckoutResponse> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Iniciando llamada al servicio de pagos externo...");
 
@@ -41,7 +43,7 @@ namespace CheckoutAPI.Application.Commands
                 // var response = await _httpClient.GetAsync("https://tools-httpstatus.pickup-services.com/200?sleep=5000", cancellationToken);
                 // response.EnsureSuccessStatusCode();
 
-                var order = new CheckoutOrder() { Id = request.Id, Price = request.Price, Status = CheckoutStatusType.CREATED };
+                var order = new CheckoutOrder() { Id = Guid.NewGuid().ToString(), Price = request.Price, Status = CheckoutStatusType.CREATED };
 
                 await _checkoutOrderDAO.InsertCheckoutOrder_NoCommit(order);
 
@@ -51,22 +53,22 @@ namespace CheckoutAPI.Application.Commands
 
                 _logger.LogInformation($"Order creado. {order.ToString()}");
 
-                return CheckoutResult.PROCESSED;
+                return new CheckoutResponse(CheckoutResult.PROCESSED, order.Id);
             }
             catch (HttpRequestException)
             {
                 _logger.LogError("El servicio de pagos ha fallado tras todos los reintentos.");
-                return CheckoutResult.ERROR;
+                return new CheckoutResponse(CheckoutResult.ERROR, "");
             }
         }
     }
 
-    public class CheckoutIdentifiedCommandHandler : IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>
+    public class CheckoutIdentifiedCommandHandler : IdentifiedCommandHandler<CheckoutCommand, CheckoutResponse>
     {
         public CheckoutIdentifiedCommandHandler(
                                             IMediator mediator,
                                             IdempotentRequestDAO idempotentRequestDAO,
-                                            ILogger<IdentifiedCommandHandler<CheckoutCommand, CheckoutResult>> logger
+                                            ILogger<IdentifiedCommandHandler<CheckoutCommand, CheckoutResponse>> logger
                                         ) : base(mediator, idempotentRequestDAO, logger)
         {
 
@@ -85,19 +87,19 @@ namespace CheckoutAPI.Application.Commands
             }
         }
 
-        protected override CheckoutResult CreateResultForDuplicateRequest(OrderStatusType status)
+        protected override CheckoutResponse CreateResultForDuplicateRequest(OrderStatusType status)
         {
-            return GetCheckoutResultByOrderStatusType(status);
+            return new CheckoutResponse(GetCheckoutResultByOrderStatusType(status), "");
         }
 
-        protected override CheckoutResult CreateResultForRequestError()
+        protected override CheckoutResponse CreateResultForRequestError()
         {
-            return CheckoutResult.ERROR;
+            return new CheckoutResponse(CheckoutResult.ERROR, "");
         }
 
-        protected override OrderStatusType GetOrderStatusType(CheckoutResult result)
+        protected override OrderStatusType GetOrderStatusType(CheckoutResponse result)
         {
-            switch (result)
+            switch (result.CheckoutResult)
             {
                 case CheckoutResult.PROCESSED:
                     return OrderStatusType.COMPLETED;

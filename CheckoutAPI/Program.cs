@@ -1,12 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using DAL;
-using Microsoft.EntityFrameworkCore;
-using EntityFramework.Exceptions.SqlServer;
-using MediatR;
 using CheckoutAPI.Application.Commands;
-using MassTransit;
-using CheckoutAPI.Entities;
 using CheckoutAPI.Application.Consumers;
+using CheckoutAPI.Application.Entities;
+using CheckoutAPI.Entities;
+using DAL;
+using EntityFramework.Exceptions.SqlServer;
+using MassTransit;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,15 +100,15 @@ app.MapPost("/api/checkout", async (
         return Results.BadRequest();
     }
 
-    CheckoutResult result = await _mediator.Send(new IdentifiedCommand<CheckoutCommand, CheckoutResult>(
+    CheckoutResponse result = await _mediator.Send(new IdentifiedCommand<CheckoutCommand, CheckoutResponse>(
         new CheckoutCommand() { Id = idempotencyKey, Price = checkoutStruct.price },
         idempotencyKey
     ));
 
-    switch (result)
+    switch (result.CheckoutResult)
     {
         case CheckoutResult.PROCESSED:
-            return Results.Accepted($"/api/checkout/status/{idempotencyKey}", new { Id = idempotencyKey });
+            return Results.Accepted($"/api/checkout/status/{result.OrderId}", new { Id = result.OrderId });
         case CheckoutResult.DUPLICATED:
             return Results.Conflict();
         case CheckoutResult.BAD_REQUEST:
