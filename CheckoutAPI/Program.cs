@@ -101,14 +101,14 @@ app.MapPost("/api/checkout", async (
     }
 
     CheckoutResponse result = await _mediator.Send(new IdentifiedCommand<CheckoutCommand, CheckoutResponse>(
-        new CheckoutCommand() { Id = idempotencyKey, Price = checkoutStruct.price },
+        new CheckoutCommand() { Price = checkoutStruct.price },
         idempotencyKey
     ));
 
     switch (result.CheckoutResult)
     {
         case CheckoutResult.PROCESSED:
-            return Results.Accepted($"/api/checkout/status/{result.OrderId}", new { Id = result.OrderId });
+            return Results.Accepted($"/api/checkout/status/{result.OrderId}", new { result.OrderId });
         case CheckoutResult.DUPLICATED:
             return Results.Conflict();
         case CheckoutResult.BAD_REQUEST:
