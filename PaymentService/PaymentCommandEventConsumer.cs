@@ -17,10 +17,10 @@ public class PaymentCommandEventConsumer : IConsumer<ProcessPaymentCommand>
     }
     public async Task Consume(ConsumeContext<ProcessPaymentCommand> context)
     {
-        _logger.LogInformation("Procesando pago para SAGA: {Id}", context.Message.Id);
+        _logger.LogInformation("Procesando pago para SAGA: {Id}", context.Message.SagaCorrelationId);
         await Task.Delay(2000);
         bool result = Random.Shared.Next(2) == 0;
         _logger.LogInformation($"Pago completado con resultado: {result}");
-        await _publishEndpoint.Publish(new PaymentProcessedIntegrationEvent(context.Message.Id, result));
+        await _publishEndpoint.Publish(new PaymentProcessedIntegrationEvent(context.Message.SagaCorrelationId, result));
     }
 }

@@ -14,6 +14,6 @@ public class OrderCreatedEventConsumer : IConsumer<OrderCreatedIntegrationEvent>
 
     public async Task Consume(ConsumeContext<OrderCreatedIntegrationEvent> context)
     {
-        _logger.LogInformation("Orden creada para SAGA: {Id}", context.Message.Id);
+        _logger.LogInformation("Orden creada para SAGA: {Id}", context.Message.SagaCorrelationId);
     }
 }

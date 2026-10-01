@@ -19,18 +19,18 @@ namespace CheckoutSaga
 
             Event(
                 () => OrderCreatedEvent, 
-                x => x.CorrelateById(context => context.Message.Id)
+                x => x.CorrelateById(context => context.Message.SagaCorrelationId)
             );
 
             Event(
                 () => PaymentProcessedEvent, 
-                x => x.CorrelateById(context => context.Message.Id)
+                x => x.CorrelateById(context => context.Message.SagaCorrelationId)
             );
             
             Initially(
                 When(OrderCreatedEvent)
                 .Then(context => context.Saga.OrderId = context.Message.OrderId)
-                .Publish(context => new ProcessPaymentCommand() { Id = context.Message.Id, OrderId = context.Message.OrderId })
+                .Publish(context => new ProcessPaymentCommand() { SagaCorrelationId = context.Message.SagaCorrelationId, OrderId = context.Message.OrderId })
                 .TransitionTo(PaymentPending)
             );
 

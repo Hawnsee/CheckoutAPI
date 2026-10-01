@@ -4,12 +4,12 @@ public record OrderCreatedIntegrationEvent
 {
     public OrderCreatedIntegrationEvent(Guid id, string orderId, DateTime createdAt)
     {
-        Id = id;
+        SagaCorrelationId = id;
         OrderId = orderId;
         CreatedAt = createdAt;
     }
 
-    public Guid Id { get; }
+    public Guid SagaCorrelationId { get; }
 
     public DateTime CreatedAt { get; }
 
