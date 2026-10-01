@@ -17,6 +17,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IdempotentRequestDAO>();
 builder.Services.AddScoped<CheckoutOrderDAO>();
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.RespectRequiredConstructorParameters = true;
+});
+
 builder.Services.AddMassTransit(x =>
 {
     x.AddConsumer<CancelOrderConsumer>();
@@ -95,7 +100,7 @@ app.MapPost("/api/checkout", async (
 {
 
     if (string.IsNullOrWhiteSpace(idempotencyKey)
-    || checkoutStruct?.price < 0)
+    || checkoutStruct.price < 0)
     {
         return Results.BadRequest();
     }
