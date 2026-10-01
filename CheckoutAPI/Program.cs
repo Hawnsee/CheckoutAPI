@@ -61,9 +61,6 @@ builder.Services.AddMassTransit(x =>
     });
 });
 
-var httpClientBuilder = builder.Services.AddHttpClient("PaymentClient");
-httpClientBuilder.AddStandardResilienceHandler();
-
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Program>());
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
