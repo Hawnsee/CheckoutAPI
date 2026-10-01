@@ -5,6 +5,6 @@ namespace CheckoutAPI.Application.Commands
 {
     public record CheckoutCommand() : IRequest<CheckoutResponse>
     {
-        public string Price { get; set; }
+        public decimal Price { get; set; }
     }
 }

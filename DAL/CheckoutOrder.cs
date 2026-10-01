@@ -6,7 +6,7 @@ namespace DAL
 
         public CheckoutStatusType Status { get; set; }
 
-        public required string Price { get; set; }
+        public required decimal Price { get; set; }
 
         public override string ToString()
         {

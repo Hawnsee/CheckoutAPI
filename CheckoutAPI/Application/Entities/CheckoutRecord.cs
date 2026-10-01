@@ -1,4 +1,4 @@
 namespace CheckoutAPI.Entities
 {
-    public record CheckoutRecord(string price);
+    public record CheckoutRecord(decimal price);
 }

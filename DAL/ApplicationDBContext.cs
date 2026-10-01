@@ -48,6 +48,10 @@ namespace DAL
                 .Property(i => i.Id)
                 .HasMaxLength(100)
                 .ValueGeneratedNever();
+
+            modelBuilder.Entity<CheckoutOrder>()
+                .Property(i => i.Price)
+                .HasPrecision(10, 2);
         }
     }
 }

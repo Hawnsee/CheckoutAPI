@@ -95,7 +95,7 @@ app.MapPost("/api/checkout", async (
 {
 
     if (string.IsNullOrWhiteSpace(idempotencyKey)
-    || string.IsNullOrWhiteSpace(checkoutStruct?.price))
+    || checkoutStruct?.price < 0)
     {
         return Results.BadRequest();
     }

@@ -2,9 +2,9 @@ namespace Checkout.Contracts.Events;
 
 public record OrderCreatedIntegrationEvent
 {
-    public OrderCreatedIntegrationEvent(Guid id, string orderId, DateTime createdAt)
+    public OrderCreatedIntegrationEvent(Guid sagaCorrelationId, string orderId, DateTime createdAt)
     {
-        SagaCorrelationId = id;
+        SagaCorrelationId = sagaCorrelationId;
         OrderId = orderId;
         CreatedAt = createdAt;
     }
