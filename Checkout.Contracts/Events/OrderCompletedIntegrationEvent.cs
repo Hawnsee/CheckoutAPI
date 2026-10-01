@@ -2,7 +2,7 @@
 
 public record OrderCompletedIntegrationEvent
 {
-    public OrderCompletedIntegrationEvent(string id, DateTime createdAt)
+    public OrderCompletedIntegrationEvent(string id, DateTimeOffset createdAt)
     {
         Id = id;
         CreatedAt = createdAt;
@@ -10,5 +10,5 @@ public record OrderCompletedIntegrationEvent
 
     public string Id { get; }
 
-    public DateTime CreatedAt { get; }
+    public DateTimeOffset CreatedAt { get; }
 }

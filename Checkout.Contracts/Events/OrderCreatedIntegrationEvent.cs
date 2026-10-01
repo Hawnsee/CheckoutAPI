@@ -2,7 +2,7 @@ namespace Checkout.Contracts.Events;
 
 public record OrderCreatedIntegrationEvent
 {
-    public OrderCreatedIntegrationEvent(Guid sagaCorrelationId, string orderId, DateTime createdAt)
+    public OrderCreatedIntegrationEvent(Guid sagaCorrelationId, string orderId, DateTimeOffset createdAt)
     {
         SagaCorrelationId = sagaCorrelationId;
         OrderId = orderId;
@@ -11,7 +11,7 @@ public record OrderCreatedIntegrationEvent
 
     public Guid SagaCorrelationId { get; }
 
-    public DateTime CreatedAt { get; }
+    public DateTimeOffset CreatedAt { get; }
 
     public string OrderId { get; }
 }

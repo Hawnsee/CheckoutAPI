@@ -47,7 +47,7 @@ namespace CheckoutAPI.Application.Commands
 
                 await _checkoutOrderDAO.InsertCheckoutOrder_NoCommit(order);
 
-                await _publishEndpoint.Publish(new OrderCreatedIntegrationEvent(Guid.NewGuid(), order.Id, DateTime.Now));
+                await _publishEndpoint.Publish(new OrderCreatedIntegrationEvent(Guid.NewGuid(), order.Id, DateTimeOffset.UtcNow));
 
                 await _checkoutOrderDAO.SaveChangesAsync();
 
